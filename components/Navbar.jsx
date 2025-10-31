@@ -85,10 +85,10 @@ export const Navbar = () => {
             </DropdownMenu>
 
             <Button variant="ghost" asChild>
-              <Link href="/auth">Sign In</Link>
+              <Link href={`/auth?from=${pathname}`}>Sign In</Link>
             </Button>
             <Button variant="gradient" asChild>
-              <Link href="/auth">Get Started</Link>
+              <Link href={`/auth?from=${pathname}`}>Get Started</Link>
             </Button>
           </div>
 

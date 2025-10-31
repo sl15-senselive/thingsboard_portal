@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,13 +15,29 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Zap } from "lucide-react";
 import { toast } from "sonner";
+import { useCart } from "@/context/cartContext";
+import { AuthService } from "@/lib/auth";
+import Link from "next/link";
 
 const Products = () => {
-  const [cart, setCart] = React.useState<string[]>([]);
+  const { cart, addToCart } = useCart();
+  // const [cart, setCart] = React.useState<string[]>([]);
   const [activeCategory, setActiveCategory] = React.useState("all");
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [user,setUser] = useState<any>(null);
+  useEffect(()=>{
+    setIsAuthenticated(AuthService.isAuthenticated());
+    setUser(AuthService.getUser()); 
+    setIsHydrated(true);
+  },[])
+
+  if(!isHydrated){
+    return null;
+  }
   const categories = [
     { id: "all", label: "All Products" },
-    { id: "gateways", label: "Modbus Gateways" },
+    { id: "gateways", label: "Modbus Gateways" }, 
     { id: "controllers", label: "Remote IO Controllers" },
     { id: "connectivity", label: "4G/5G Products" },
     { id: "wireless", label: "LoRa/ZigBee Devices" },
@@ -45,7 +61,7 @@ const Products = () => {
       ],
       image: "/products/wireless-bus-bar/edge8000/front.png",
       category: "wireless-bus-bar",
-      price: 899,
+      price: 39000,
     },
     {
       id: "sensebt-222",
@@ -59,7 +75,7 @@ const Products = () => {
       ],
       image: "/products/wireless-bus-bar/SenseBT222/SenseBT222img1.png",
       category: "wireless-bus-bar",
-      price: 149,
+      price: 7500,
     },
     {
       id: "sensect-222",
@@ -73,7 +89,7 @@ const Products = () => {
       ],
       image: "/products/wireless-bus-bar/SenseCT222/SenseCT222img1.png",
       category: "wireless-bus-bar",
-      price: 179,
+      price: 7700,
     },
 
     // Controllers
@@ -89,7 +105,7 @@ const Products = () => {
       ],
       image: "/products/controllers/e7000/thumbnail.png",
       category: "controllers",
-      price: 320,
+      price: 14529,
     },
     {
       id: "e7500",
@@ -103,7 +119,7 @@ const Products = () => {
       ],
       image: "/products/controllers/e7500/thumbnail.png",
       category: "controllers",
-      price: 299,
+      price: 6814,
     },
     {
       id: "e6888",
@@ -117,7 +133,7 @@ const Products = () => {
       ],
       image: "/products/controllers/e6888/e6888.png",
       category: "controllers",
-      price: 449,
+      price: 15771,
     },
     {
       id: "s485h",
@@ -133,7 +149,7 @@ const Products = () => {
       ],
       image: "/products/controllers/s485h/s485h.png",
       category: "controllers",
-      price: 399,
+      price: 9000,
     },
 
     // Connectivity
@@ -149,7 +165,7 @@ const Products = () => {
       ],
       image: "/products/connectivity/x9000/thumbnail.png",
       category: "connectivity",
-      price: 599,
+      price: 20100,
     },
     {
       id: "x7400d",
@@ -163,7 +179,7 @@ const Products = () => {
       ],
       image: "/products/wireless/X7700D/X7700Dimg1.png",
       category: "connectivity",
-      price: 429,
+      price: 5486,
     },
     {
       id: "x7400",
@@ -172,7 +188,7 @@ const Products = () => {
       specs: ["LTE Cat 4", "WiFi Hotspot", "Compact Design", "Easy Setup"],
       image: "/products/connectivity/x7400/x7400img1.png",
       category: "connectivity",
-      price: 379,
+      price: 7929,
     },
     {
       id: "x7400e",
@@ -186,7 +202,7 @@ const Products = () => {
       ],
       image: "/products/connectivity/7400E/x7400e.png",
       category: "connectivity",
-      price: 349,
+      price: 17829,
     },
 
     // Gateways
@@ -202,7 +218,7 @@ const Products = () => {
       ],
       image: "/products/gateway/x5050/X5050.png",
       category: "gateways",
-      price: 299,
+      price: 4500,
     },
     {
       id: "x6000",
@@ -216,7 +232,7 @@ const Products = () => {
       ],
       image: "/products/gateway/x6000/x6000.png",
       category: "gateways",
-      price: 369,
+      price: 9771,
     },
     {
       id: "x6600",
@@ -232,7 +248,7 @@ const Products = () => {
       ],
       image: "/products/gateway/x6600/x6600.png",
       category: "gateways",
-      price: 389,
+      price: 10500,
     },
     {
       id: "x5600",
@@ -246,7 +262,7 @@ const Products = () => {
       ],
       image: "/products/gateway/x5600/x5600.png",
       category: "gateways",
-      price: 359,
+      price: 7929,
     },
     {
       id: "x5200",
@@ -259,7 +275,7 @@ const Products = () => {
       ],
       image: "/products/gateway/x5200/x5200.png",
       category: "gateways",
-      price: 319,
+      price: 8057,
     },
     {
       id: "x8300",
@@ -286,7 +302,7 @@ const Products = () => {
       ],
       image: "/products/gateway/x9900/x9900.png",
       category: "gateways",
-      price: 599,
+      price: 20100,
     },
 
     // Wireless
@@ -302,7 +318,7 @@ const Products = () => {
       ],
       image: "/products/wireless/X7700D/X7700Dimg1.png",
       category: "wireless",
-      price: 279,
+      price: 3300,
     },
     {
       id: "x7800",
@@ -316,7 +332,7 @@ const Products = () => {
       ],
       image: "/products/wireless/senseliveX7800/main.png",
       category: "wireless",
-      price: 329,
+      price: 7500,
     },
     {
       id: "x7900",
@@ -330,7 +346,7 @@ const Products = () => {
       ],
       image: "/products/wireless/x7900/thumbnail.png",
       category: "wireless",
-      price: 459,
+      price: 10243,
     },
 
     // WiFi
@@ -347,7 +363,7 @@ const Products = () => {
       ],
       image: "/products/wifi/x7050/X7050.png",
       category: "wifi",
-      price: 289,
+      price: 3771,
     },
 
     // Fiber
@@ -363,7 +379,7 @@ const Products = () => {
       ],
       image: "/products/fiber/X8555/x8555img1.png",
       category: "fiber",
-      price: 319,
+      price: 10414,
     },
     {
       id: "x8550",
@@ -377,7 +393,7 @@ const Products = () => {
       ],
       image: "/products/fiber/X8550/x8550-front.png",
       category: "fiber",
-      price: 289,
+      price: 6943,
     },
 
     // Switch
@@ -397,14 +413,32 @@ const Products = () => {
     },
   ];
 
-  const handleAddToCart = (productId: string) => {
-    setCart((prev) => [...prev, productId]);
+  const handleAddToCart = (product: (typeof allProducts)[0]) => {
+    console.log(user);
+    
+    if (!isAuthenticated) {
+      toast("Please log in first", {
+        description: "You must be signed in to add products to your cart.",
+      });
+      window.location.href = "/auth";
+      return;
+    }
+
+    addToCart(product);
     toast("Added to Cart", {
-      description: "Product has been added to your cart successfully.",
+      description: `${product.name} has been added to your cart successfully.`,
     });
   };
 
   const handleBuyNow = (product: (typeof allProducts)[0]) => {
+    if (!isAuthenticated) {
+      toast("Please log in first", {
+        description: "You must be signed in to purchase products.",
+      });
+      window.location.href = "/auth";
+      return;
+    }
+
     toast("Proceeding to Checkout", {
       description: `Purchasing ${
         product.name
@@ -415,7 +449,9 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
-
+      <Link href={'/cart'} className="fixed z-10 w-11 h-11 rounded-full bg-gradient-primary flex justify-center items-center shadow-lg top-40 right-5">
+        <ShoppingCart className="w-6 h-6  text-white" />
+      </Link>
       <div className="container mx-auto px-4 py-16 max-w-7xl">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold mb-4">
@@ -434,23 +470,25 @@ const Products = () => {
             </Badge>
           )}
         </div>
+
+        {/* Category Buttons */}
         <div className="flex flex-wrap justify-center gap-3 mb-10">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-5 py-2 rounded-full text-sm font-medium border transition-all duration-200
-        ${
-          activeCategory === cat.id
-            ? "bg-gradient-primary text-white border-gradient-primary"
-            : "bg-white text-gray-800 border-gray-200 hover:bg-gray-100"
-        }`}
+              className={`px-5 py-2 rounded-full text-sm font-medium border transition-all duration-200 ${
+                activeCategory === cat.id
+                  ? "bg-gradient-primary text-white border-gradient-primary"
+                  : "bg-white text-gray-800 border-gray-200 hover:bg-gray-100"
+              }`}
             >
               {cat.label}
             </button>
           ))}
         </div>
 
+        {/* Product Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {allProducts
             .filter(
@@ -459,13 +497,13 @@ const Products = () => {
             .map((product) => (
               <Card
                 key={product.id}
-                className="border-2 hover:shadow-large transition-all duration-300 flex flex-col"
+                className="border-2 hover:shadow-xl transition-all duration-300 flex flex-col"
               >
                 <CardHeader>
-                  <Badge className="w-fit bg-accent text-accent-foreground mb-3">
-                    {product.category}
+                  <Badge className="w-fit capitalize mb-3">
+                    {product.category.replace("-", " ")}
                   </Badge>
-                  <div className="relative w-full h-48 mb-4">
+                  <div className="relative w-full mb-4 overflow-hidden rounded-lg">
                     <Image
                       src={product.image}
                       alt={product.name}
@@ -475,49 +513,27 @@ const Products = () => {
                       sizes="(max-width: 768px) 100vw, 33vw"
                     />
                   </div>
-                  <CardTitle className="text-xl">{product.name}</CardTitle>
+                  <CardTitle className="text-xl font-semibold">
+                    {product.name}
+                  </CardTitle>
                   <CardDescription className="text-sm">
                     {product.description}
                   </CardDescription>
                 </CardHeader>
 
                 <CardContent className="space-y-4 flex-1">
-                  <div>
-                    <p className="text-3xl font-bold text-primary">
-                      ₹{product.price.toLocaleString()}
-                    </p>
-                  </div>
+                  <p className="text-3xl font-bold text-primary">
+                    ₹{product.price.toLocaleString()}
+                  </p>
 
                   <div>
                     <h4 className="font-semibold text-sm mb-2">Features</h4>
-                    <ul className="space-y-1">{product.description}</ul>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                      {product.specs.map((spec, i) => (
+                        <li key={i}>{spec}</li>
+                      ))}
+                    </ul>
                   </div>
-
-                  {/* <div>
-                  <h4 className="font-semibold text-sm mb-2">Specifications</h4>
-                  <dl className="space-y-1 text-xs">
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Connectivity</dt>
-                      <dd className="font-medium">
-                        {product.specifications.connectivity}
-                      </dd>
-                    </div>
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Protocol</dt>
-                      <dd className="font-medium">
-                        {product.specifications.protocol}
-                      </dd>
-                    </div>
-                    {product.specifications.accuracy && (
-                      <div className="flex justify-between">
-                        <dt className="text-muted-foreground">Accuracy</dt>
-                        <dd className="font-medium">
-                          {product.specifications.accuracy}
-                        </dd>
-                      </div>
-                    )}
-                  </dl>
-                </div> */}
                 </CardContent>
 
                 <CardFooter className="flex flex-col gap-2">
@@ -531,7 +547,7 @@ const Products = () => {
                   <Button
                     className="w-full bg-gradient-primary bg-clip-text text-transparent"
                     variant="outline"
-                    onClick={() => handleAddToCart(product.id)}
+                    onClick={() => handleAddToCart(product)}
                   >
                     <ShoppingCart className="mr-2" />
                     Add to Cart
