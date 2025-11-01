@@ -9,26 +9,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ShoppingCart, Trash2, ArrowRight } from "lucide-react";
+import { ShoppingCart, Trash2, ArrowRight, Plus, Minus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cartContext";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 
 const Cart = () => {
-  const { cart, removeFromCart, clearCart, getCartTotal } = useCart();
+  const { cart, addToCart, removeFromCart, clearCart, getCartTotal } =
+    useCart();
   const router = useRouter();
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // ✅ Mark when we're on the client
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  if (!isHydrated) {
-    // Optional: show a loading skeleton or nothing
-    return null;
-  }
+  if (!isHydrated) return null;
+
   const handleCheckout = () => {
     if (cart.length === 0) {
       toast("Cart is empty", {
@@ -39,11 +37,23 @@ const Cart = () => {
     router.push("/purchase");
   };
 
-  const handleRemove = (productId: string) => {
-    removeFromCart(productId);
+  const handleRemoveAll = (productId: string) => {
+    // Removes *all* occurrences of a product
+    const quantity = getItemQuantity(productId);
+    for (let i = 0; i < quantity; i++) {
+      removeFromCart(productId);
+    }
     toast("Removed from cart", {
-      description: "Item has been removed from your cart.",
+      description: "Item has been removed completely from your cart.",
     });
+  };
+
+  const handleIncrease = (product: any) => {
+    addToCart(product);
+  };
+
+  const handleDecrease = (productId: string) => {
+    removeFromCart(productId);
   };
 
   const getItemQuantity = (productId: string) =>
@@ -88,6 +98,7 @@ const Cart = () => {
           </Card>
         ) : (
           <div className="grid lg:grid-cols-3 gap-8">
+            {/* 🛒 Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {uniqueProducts.map((product) => {
                 const quantity = getItemQuantity(product.id);
@@ -110,10 +121,30 @@ const Cart = () => {
                         <p className="text-sm text-muted-foreground">
                           {product.category}
                         </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Quantity: {quantity}
-                        </p>
+
+                        {/* Quantity Controls */}
+                        <div className="flex items-center gap-3 mt-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleDecrease(product.id)}
+                            disabled={quantity === 1}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          <span className="font-medium w-8 text-center">
+                            {quantity}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => handleIncrease(product)}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
+
                       <div className="text-right">
                         <p className="text-2xl font-bold text-primary">
                           ₹{(product.price * quantity).toLocaleString()}
@@ -121,7 +152,7 @@ const Cart = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemove(product.id)}
+                          onClick={() => handleRemoveAll(product.id)}
                           className="mt-2"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
@@ -134,25 +165,18 @@ const Cart = () => {
               })}
             </div>
 
+            {/* 💰 Order Summary */}
             <div className="lg:col-span-1">
               <Card className="sticky top-4">
                 <CardHeader>
                   <CardTitle>Order Summary</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span>₹{getCartTotal().toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Tax (18%)</span>
-                    <span>₹{(getCartTotal() * 0.18).toLocaleString()}</span>
-                  </div>
                   <div className="border-t pt-4">
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
                       <span className="text-primary">
-                        ₹{(getCartTotal() * 1.18).toLocaleString()}
+                        ₹{(getCartTotal()).toLocaleString()}
                       </span>
                     </div>
                   </div>

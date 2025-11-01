@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { firstName, lastName, email, password } = body;
-
+    const role = 'user'; // Default role
     // Check if user exists
     const existing = await pool.query("SELECT * FROM users WHERE email = $1", [
       email,
@@ -26,18 +26,18 @@ export async function POST(request: NextRequest) {
 
     // Insert new user
     const query = `
-      INSERT INTO users (firstname, lastname, email, password)
-      VALUES ($1, $2, $3, $4)
-      RETURNING _id, firstname, lastname, email;
+      INSERT INTO users (firstname, lastname, email, password,role)
+      VALUES ($1, $2, $3, $4,$5)
+      RETURNING _id, firstname, lastname, email,role;
     `;
-    const values = [firstName, lastName, email, hashedPassword];
+    const values = [firstName, lastName, email, hashedPassword,role];
     const result = await pool.query(query, values);
     const user = result.rows[0];
     console.log(user);
     
     // Create JWT token
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: user.role },
       JWT_SECRET,
       { expiresIn: "1d" }
     );

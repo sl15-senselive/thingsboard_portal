@@ -19,25 +19,45 @@ import { useCart } from "@/context/cartContext";
 import { AuthService } from "@/lib/auth";
 import Link from "next/link";
 
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  specs: string[];
+  image: string;
+  category: string;
+  price: number;
+}
+
 const Products = () => {
   const { cart, addToCart } = useCart();
   // const [cart, setCart] = React.useState<string[]>([]);
+  const [products, setProducts] = React.useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = React.useState("all");
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user,setUser] = useState<any>(null);
-  useEffect(()=>{
+  const [user, setUser] = useState<any>(null);
+  const result = async () => {
+    const res = await fetch("/api/products");
+    const data = await res.json();
+    // console.log(data);
+    
+    setProducts(data);
+  };
+  useEffect(() => {
     setIsAuthenticated(AuthService.isAuthenticated());
-    setUser(AuthService.getUser()); 
+    setUser(AuthService.getUser());
     setIsHydrated(true);
-  },[])
+    result();
+  }, []);
 
-  if(!isHydrated){
+  if (!isHydrated) {
     return null;
   }
+  
   const categories = [
     { id: "all", label: "All Products" },
-    { id: "gateways", label: "Modbus Gateways" }, 
+    { id: "gateways", label: "Modbus Gateways" },
     { id: "controllers", label: "Remote IO Controllers" },
     { id: "connectivity", label: "4G/5G Products" },
     { id: "wireless", label: "LoRa/ZigBee Devices" },
@@ -415,7 +435,7 @@ const Products = () => {
 
   const handleAddToCart = (product: (typeof allProducts)[0]) => {
     console.log(user);
-    
+
     if (!isAuthenticated) {
       toast("Please log in first", {
         description: "You must be signed in to add products to your cart.",
@@ -449,9 +469,16 @@ const Products = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar />
-      <Link href={'/cart'} className="fixed z-10 w-11 h-11 rounded-full bg-gradient-primary flex justify-center items-center shadow-lg top-40 right-5">
-        <ShoppingCart className="w-6 h-6  text-white" />
-      </Link>
+      <div className="fixed z-10 w-11 h-11 rounded-full bg-gradient-primary flex justify-center items-center shadow-lg top-40 right-5">
+        <Link href={"/cart"}>
+          <ShoppingCart className="w-6 h-6  text-white" />
+        </Link>
+        {cart.length > 0 && (
+          <div className="bg-red-600 rounded-full text-xs relative right-0 w-4 h-4 -top-4 text-center text-white">
+            {cart.length}
+          </div>
+        )}
+      </div>
       <div className="container mx-auto px-4 py-16 max-w-7xl">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold mb-4">
@@ -463,12 +490,6 @@ const Products = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Industry-leading IoT devices and sensors for every use case
           </p>
-          {cart.length > 0 && (
-            <Badge className="mt-4 bg-accent text-accent-foreground">
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              {cart.length} items in cart
-            </Badge>
-          )}
         </div>
 
         {/* Category Buttons */}
@@ -490,7 +511,7 @@ const Products = () => {
 
         {/* Product Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {allProducts
+          {products && products.length >0 && products
             .filter(
               (p) => activeCategory === "all" || p.category === activeCategory
             )
@@ -555,6 +576,11 @@ const Products = () => {
                 </CardFooter>
               </Card>
             ))}
+            {!products || products.length === 0 && (
+              <p className="text-center text-muted-foreground col-span-full">
+                No products available at the moment. Please check back later.
+              </p>
+            )}
         </div>
       </div>
     </div>
