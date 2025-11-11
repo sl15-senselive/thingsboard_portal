@@ -1,8 +1,8 @@
 "use client";
 
+import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,46 +15,63 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import axios from "axios";
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+import { Eye, EyeOff } from "lucide-react";
+
 const Auth = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const searchParams = useSearchParams();
-  if (!searchParams) return null;
-  const from = searchParams.get("from") || "/dashboard"; // fallback
+  const { data: session, status } = useSession();
+
+  const from = searchParams?.get("from") || "/dashboard";
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/");
+    }
+  }, [status, router]);
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
+
     try {
       const formData = new FormData(e.currentTarget);
-      const data = Object.fromEntries(formData.entries());
+      const body = Object.fromEntries(formData.entries());
 
-      const res = await axios.post("/api/auth/register", data, {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
-      if (res.status === 201) {
-        const token = res.data.token;
-        localStorage.setItem("token", token);
-        toast.success("Registration successfull!");
-      } else {
-        toast.error(res.data.message || "Registration failed");
-        return;
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Registration failed");
       }
-      setIsLoading(true);
-      setTimeout(() => {
-        toast.success(`Account created for ${data.email}!`);
+
+      toast.success(`Account created for ${data.email}!`);
+
+      // Auto-login after registration
+      const result = await signIn("credentials", {
+        email: body.email as string,
+        password: body.password as string,
+        redirect: false,
+      });
+
+      if (result?.ok) {
         router.push(from);
-      }, 1000);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        // Axios error: safe to read response
-        toast.error(
-          error.response?.data?.message || "Server responded with an error."
-        );
-      } else {
-        // Non-Axios error (network, code issue, etc.)
-        toast.error("Unexpected error. Please try again.");
       }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Registration failed"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -62,29 +79,37 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
       const formData = new FormData(e.currentTarget);
-      const email = formData.get("email") as string;
-      const password = formData.get("password") as string;
+      const result = await signIn("credentials", {
+        email: formData.get("email") as string,
+        password: formData.get("password") as string,
+        redirect: false,
+      });
 
-      const res = await axios.post("/api/auth/login", { email, password });
-
-      if (res.status === 200) {
-        const token = res.data.token;
-        localStorage.setItem("token", token);
-        toast.success(`Welcome back, ${email}!`);
+      if (result?.error) {
+        toast.error(result.error);
+      } else if (result?.ok) {
+        toast.success(`Welcome back, ${formData.get("email")}!`);
         router.push(from);
-      } else {
-        toast.error("Invalid email or password.");
       }
     } catch (error) {
-      console.error("Login error:", error);
       toast.error("Failed to sign in. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Show loading state while checking session
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -124,13 +149,29 @@ const Auth = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="login-password">Password</Label>
-                        <Input
-                          id="login-password"
-                          name="password"
-                          type="password"
-                          placeholder="••••••••"
-                          required
-                        />
+                        <div className="relative">
+                          <Input
+                            id="login-password"
+                            name="password"
+                            type={showLoginPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            required
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowLoginPassword(!showLoginPassword)
+                            }
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showLoginPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                       <Button
                         type="submit"
@@ -181,13 +222,29 @@ const Auth = () => {
 
                       <div className="space-y-2">
                         <Label htmlFor="register-password">Password</Label>
-                        <Input
-                          id="register-password"
-                          name="password"
-                          type="password"
-                          placeholder="••••••••"
-                          required
-                        />
+                        <div className="relative">
+                          <Input
+                            id="register-password"
+                            name="password"
+                            type={showRegisterPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            required
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowRegisterPassword(!showRegisterPassword)
+                            }
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showRegisterPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
 
                       <Button

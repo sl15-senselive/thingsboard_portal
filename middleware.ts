@@ -1,35 +1,47 @@
+import withAuth from "next-auth/middleware";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
+export default withAuth(
+  function middleware(req) {
+    const { pathname } = req.nextUrl;
+    const token = req.nextauth.token;
 
-export function middleware(req: NextRequest) {
-  const token = req.headers.get("authorization")?.split(" ")[1];
-
-  if (!token) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: string; role: string };
-
-    // ✅ Check for admin role
-    if (decoded.role !== "admin") {
-      return NextResponse.json(
-        { error: "Access denied. Admins only." },
-        { status: 403 }
-      );
+    // ✅ Always allow NextAuth API routes and auth pages
+    if (
+      pathname.startsWith("/api/auth") ||
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname === "/auth"
+    ) {
+      return NextResponse.next();
     }
 
-    // Allow the request to continue
-    return NextResponse.next();
-  } catch (err) {
-    return NextResponse.json({ error: "Invalid or expired token" }, { status: 403 });
-  }
-}
+    // ✅ Protect /admin (require admin role)
+    if (pathname.startsWith("/admin")) {
+      if (!token || token.role !== "admin") {
+        return NextResponse.redirect(new URL("/auth", req.url));
+      }
+      return NextResponse.next();
+    }
 
-// ✅ Apply to specific admin routes
+    // ✅ Protect /dashboard and /cart (require login)
+    if (pathname.startsWith("/dashboard") || pathname.startsWith("/cart")) {
+      if (!token) {
+        return NextResponse.redirect(new URL("/auth", req.url));
+      }
+      return NextResponse.next();
+    }
+
+    // ✅ Allow all other routes
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: () => true, // We handle authorization manually above
+    },
+  }
+);
+
 export const config = {
-  matcher: [],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|public/).*)"],
 };

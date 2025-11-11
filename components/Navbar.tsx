@@ -1,9 +1,10 @@
 'use client';
+
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Menu, X, User, LogOut } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,16 +12,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Image from 'next/image';
-import { AuthService } from '@/lib/auth';
+import { signOut, useSession } from "next-auth/react";
 
 export const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { data: session, status } = useSession();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [user, setUser] = useState<any>(null);
 
   const navItems = [
     { name: 'Home', path: '/' },
@@ -29,24 +28,14 @@ export const Navbar = () => {
     { name: 'Contact', path: '/contact' },
   ];
 
-  // 🔹 On mount: check authentication + decode user
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsAuthenticated(AuthService.isAuthenticated());
-      setUser(AuthService.getUser());
-      setIsHydrated(true);
-    }
-  }, []);
-
   // 🔹 Logout handler
   const handleLogout = () => {
-    AuthService.logout();
-    setIsAuthenticated(false);
-    setUser(null);
-    router.push('/');
+    signOut({ callbackUrl: '/' });
   };
 
-  if (!isHydrated) return null;
+  // Check authentication status
+  const isAuthenticated = status === "authenticated";
+  const user = session?.user;
 
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-soft">
@@ -177,10 +166,10 @@ export const Navbar = () => {
               ) : (
                 <>
                   <Button variant="outline" className="w-full" asChild>
-                    <Link href="/auth">Sign In</Link>
+                    <Link href={`/auth?from=${pathname}`}>Sign In</Link>
                   </Button>
                   <Button className="w-full" asChild>
-                    <Link href="/auth">Get Started</Link>
+                    <Link href={`/auth?from=${pathname}`}>Get Started</Link>
                   </Button>
                 </>
               )}

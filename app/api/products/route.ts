@@ -3,17 +3,20 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const result = await pool.query("SELECT * FROM products ORDER BY created_at DESC");
+    const result = await pool.query(
+      "SELECT * FROM products ORDER BY created_at DESC"
+    );
 
-    const products = result.rows.map((p:typeof products) => ({
+    const products = result.rows.map((p: any) => ({
       ...p,
       specs:
         typeof p.specs === "string"
           ? p.specs
               .replace(/[{}"]/g, "")
               .split(",")
-              .map((s:string) => s.trim())
+              .map((s: string) => s.trim())
           : p.specs || [],
+      price: parseFloat(p.price),
     }));
 
     return NextResponse.json(products, { status: 200 });

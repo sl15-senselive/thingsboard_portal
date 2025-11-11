@@ -1,57 +1,46 @@
-import { NextRequest, NextResponse } from "next/server";
 import { pool } from "@/lib/db";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
+import { NextRequest, NextResponse } from "next/server";
+// import { connectToDatabase } from "@/lib/db";
+// import User from "@/models/User";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { firstName, lastName, email, password } = body;
-    const role = 'user'; // Default role
-    // Check if user exists
-    const existing = await pool.query("SELECT * FROM users WHERE email = $1", [
-      email,
-    ]);
-    if (existing.rows.length > 0) {
+    const { email, password } = await request.json();
+
+    if (!email || !password) {
       return NextResponse.json(
-        { message: "User already exists" },
+        { error: "Email and password are required" },
         { status: 400 }
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Check if user already exists
+    const q = "SELECT * FROM users WHERE email = $1";
+    const { rows } = await pool.query(q, [email]);
+    const existingUser = rows[0];
 
-    // Insert new user
-    const query = `
-      INSERT INTO users (firstname, lastname, email, password,role)
-      VALUES ($1, $2, $3, $4,$5)
-      RETURNING _id, firstname, lastname, email,role;
-    `;
-    const values = [firstName, lastName, email, hashedPassword,role];
-    const result = await pool.query(query, values);
-    const user = result.rows[0];
-    console.log(user);
-    
-    // Create JWT token
-    const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role },
-      JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "Email already registered" },
+        { status: 400 }
+      );
+    }
 
-    console.log("✅ User registered:", user.email);
-
+    // await User.create({
+    //   email,
+    //   password,
+    // });
+    const insertQuery =
+      "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *";
+    await pool.query(insertQuery, [email, password]);
     return NextResponse.json(
-      { message: "Registration successful", user, token },
+      { message: "User registered successfully" },
       { status: 201 }
     );
   } catch (error) {
-    console.error("Register route error:", error);
+    console.error("Registration error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Failed to register user" },
       { status: 500 }
     );
   }

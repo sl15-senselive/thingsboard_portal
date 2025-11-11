@@ -14,6 +14,15 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/context/cartContext";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  specs: string[];
+  image: string;
+  category: string;
+  price: number;
+}
 
 const Cart = () => {
   const { cart, addToCart, removeFromCart, clearCart, getCartTotal } =
@@ -48,7 +57,9 @@ const Cart = () => {
     });
   };
 
-  const handleIncrease = (product: any) => {
+  const handleIncrease = (product: Product) => {
+    console.log(product);
+    
     addToCart(product);
   };
 
@@ -57,11 +68,11 @@ const Cart = () => {
   };
 
   const getItemQuantity = (productId: string) =>
-    cart.filter((item) => item.id === productId).length;
+    cart.filter((item) => item._id === productId).length;
 
   const uniqueProducts = cart.filter(
     (product, index, self) =>
-      index === self.findIndex((p) => p.id === product.id)
+      index === self.findIndex((p) => p._id === product._id)
   );
 
   return (
@@ -101,9 +112,9 @@ const Cart = () => {
             {/* 🛒 Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               {uniqueProducts.map((product) => {
-                const quantity = getItemQuantity(product.id);
+                const quantity = getItemQuantity(product._id);
                 return (
-                  <Card key={product.id}>
+                  <Card key={product._id}>
                     <CardContent className="flex items-center gap-4 p-6">
                       <img
                         src={
@@ -127,7 +138,7 @@ const Cart = () => {
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => handleDecrease(product.id)}
+                            onClick={() => handleDecrease(product._id)}
                             disabled={quantity === 1}
                           >
                             <Minus className="w-4 h-4" />
@@ -152,7 +163,7 @@ const Cart = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleRemoveAll(product.id)}
+                          onClick={() => handleRemoveAll(product._id)}
                           className="mt-2"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
