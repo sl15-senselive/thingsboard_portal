@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Navbar } from '@/components/Navbar';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Sidebar } from "@/components/Sidebar";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Mail, Phone, MapPin } from 'lucide-react';
-import { toast } from 'sonner';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Mail, Phone, MapPin } from "lucide-react";
+import { toast } from "sonner";
 
 const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,20 +24,22 @@ const Contact = () => {
     setIsSubmitting(true);
 
     setTimeout(() => {
-      toast.success('Thank you! Our team will contact you within 24 hours.');
+      toast.success("Thank you! Our team will contact you within 24 hours.");
       setIsSubmitting(false);
       e.currentTarget.reset();
     }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-hero flex items-center">
+      <div>
+        <Sidebar />
+      </div>
 
-      <div className="container mx-auto px-4 py-16">
+      <div className="w-full p-8">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold mb-4">
-            Get in{' '}
+            Get in{" "}
             <span className="bg-gradient-primary bg-clip-text text-transparent">
               Touch
             </span>
@@ -128,7 +130,7 @@ const Contact = () => {
                     className="w-full"
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? 'Sending...' : 'Send Message'}
+                    {isSubmitting ? "Sending..." : "Send Message"}
                   </Button>
                 </form>
               </CardContent>

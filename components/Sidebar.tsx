@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, LogOut, Home, Briefcase, Package, Phone, ShoppingBagIcon, Settings } from 'lucide-react';
+import { Menu, X, User, LogOut, Home, Briefcase, Package, Phone, ShoppingBagIcon } from 'lucide-react';
 import { useState } from 'react';
 import {
   DropdownMenu,
@@ -14,7 +14,7 @@ import {
 import Image from 'next/image';
 import { signOut, useSession } from "next-auth/react";
 
-const Sidebar = () => {
+export const Sidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const { data: session, status } = useSession();
@@ -22,9 +22,10 @@ const Sidebar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
-    { name: 'Dashboard', path: '/admin', icon: Home },
-    { name: 'Customers', path: '/admin/customers', icon: User },
-    { name: 'Devices', path: '/admin/devices', icon: Settings },
+    { name: 'Dashboard', path: '/dashboard', icon: Home },
+    { name: 'Solutions', path: '/solutions', icon: ShoppingBagIcon },
+    // { name: 'Products', path: '/products', icon: Package },
+    { name: 'Contact', path: '/contact', icon: Phone },
   ];
 
   const handleLogout = () => {
@@ -155,5 +156,3 @@ const Sidebar = () => {
     </>
   );
 };
-
-export default Sidebar;

@@ -1,11 +1,11 @@
-import { Navbar } from "@/components/Navbar";
-import LandingPage from "@/pages/LandingPage";
+
+// import { Sidebar } from "@/components/Sidebar";
+// import LandingPage from "@/components/LandingPage";
 
 export default function Home() {
-    return (
-        <div className="">
-            <Navbar/>
-            <LandingPage />
-        </div>
-    );
+  return (
+    <div className="">
+      
+    </div>
+  );
 }

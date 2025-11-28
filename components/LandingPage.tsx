@@ -1,5 +1,5 @@
 "use client";
-import { Navbar } from "@/components/Navbar";
+import { Sidebar} from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import {

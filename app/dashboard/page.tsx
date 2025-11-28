@@ -1,240 +1,466 @@
-'use client';
-import { useEffect, useState } from "react";
-import { Navbar } from "@/components/Navbar";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, Package, Server } from "lucide-react";
+"use client";
+import React, { useEffect } from "react";
+import {
+  DollarSign,
+  FileText,
+  CreditCard,
+  ShoppingCart,
+  Package,
+  IndianRupee,
+  Cpu,
+  EyeOff,
+  Eye,
+} from "lucide-react";
+import { Sidebar } from "@/components/Sidebar";
+import { toast } from "sonner";
 
-// Interfaces
-interface Purchase {
-  id: string;
-  solution_name: string;
-  solution_type: string;
-  base_price: number;
-  total_price: number;
-  device_count: number;
-  purchase_date: string;
-}
-
-interface Subscription {
-  id: string;
-  subscription_type: string;
-  start_date: string;
-  end_date: string;
-  is_active: boolean;
-}
-
-interface Device {
-  id: string;
-  device_name: string;
-  device_serial: string;
-  status: string;
-  allocated_date: string;
-}
-
-const Dashboard = () => {
-  const [loading, setLoading] = useState(true);
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [devices, setDevices] = useState<Device[]>([]);
-
+const CustomerDashboard = () => {
   useEffect(() => {
-    // Simulate checking auth or data fetch delay
-    setTimeout(() => {
-      setLoading(false);
-
-      // ✅ Sample static data (you can replace with real API later)
-      setPurchases([
-        {
-          id: "1",
-          solution_name: "Fleet Tracker",
-          solution_type: "IoT",
-          base_price: 500,
-          total_price: 750,
-          device_count: 5,
-          purchase_date: "2025-09-01",
-        },
-      ]);
-
-      setSubscriptions([
-        {
-          id: "1",
-          subscription_type: "Annual",
-          start_date: "2025-09-01",
-          end_date: "2026-09-01",
-          is_active: true,
-        },
-      ]);
-
-      setDevices([
-        {
-          id: "1",
-          device_name: "Tracker A1",
-          device_serial: "SN123456",
-          status: "active",
-          allocated_date: "2025-09-02",
-        },
-      ]);
-    }, 800);
+    fetchDevices();
   }, []);
 
-  const calculateDaysRemaining = (endDate: string) => {
-    const end = new Date(endDate);
-    const now = new Date();
-    const diff = end.getTime() - now.getTime();
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    return days;
-  };
+  function toLocalIST(timestamp: string) {
+    const date = new Date(timestamp);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    if (isNaN(date.getTime())) return "Invalid timestamp";
+
+    return date.toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
   }
 
+  const [showModal, setShowModal] = React.useState(false);
+  const [ordersData, setOrdersData] = React.useState<any[] | null>(null);
+  const [selectedCreds, setSelectedCreds] = React.useState<any>(null);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showAddModal, setShowAddModal] = React.useState(false);
+
+  const [newDevice, setNewDevice] = React.useState({
+    name: "",
+    username: "",
+    password: "",
+  });
+
+  function openCreds(order: any) {
+    const creds = JSON.parse(order.creds);
+
+    setSelectedCreds({
+      id: order.id,
+      userName: creds.userName,
+      password: creds.password,
+    });
+    console.log(order.id);
+    
+    setShowPassword(false);
+    setShowModal(true);
+  }
+
+  async function updateCreds() {
+    try {
+      const res = await fetch("/api/admin/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedCreds.id,
+          username: selectedCreds.userName,
+          password: selectedCreds.password,
+        }),
+      });
+
+      if (!res.ok) {
+        toast.error(res.statusText || "Failed to update credentials");
+        return;
+      }
+
+      toast.success("Credentials updated successfully!");
+
+      setShowModal(false);
+      fetchDevices(); // refresh table
+    } catch (error) {
+      console.error(error);
+      toast.error("Error updating credentials");
+    }
+  }
+
+  async function fetchDevices() {
+    try {
+      const res = await fetch("/api/device", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!res.ok) {
+        alert("Failed to fetch devices");
+        return;
+      }
+
+      const { devices } = await res.json();
+
+      // Sort by created_at DESC
+      const sortedDevices = devices.sort(
+        (a: any, b: any) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setOrdersData(sortedDevices);
+      console.log("Devices:", sortedDevices);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function saveDevice() {
+    try {
+      const res = await fetch("/api/device", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newDevice.name,
+          username: newDevice.username,
+          password: newDevice.password,
+        }),
+      });
+
+      if (!res.ok) {
+        toast.error("Failed to add device");
+        return;
+      }
+
+      toast.success("Device added successfully!");
+      setShowAddModal(false);
+
+      // reset form
+      setNewDevice({ name: "", username: "", password: "" });
+    } catch (error) {
+      toast.error("Error adding device");
+      console.error(error);
+    }
+  }
+
+  // const handle
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container max-w-7xl mx-auto px-4 py-8 mt-20">
-        <h1 className="text-4xl font-bold mb-8">My Dashboard</h1>
+    <div className="min-h-screen bg-gray-50 flex">
+      <div>
+        <Sidebar />
+      </div>
+      <div className="w-full p-8 ">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Customer Dashboard
+          </h1>
+        </div>
 
-        {/* Purchases Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              My Purchases
-            </CardTitle>
-            <CardDescription>View all your solution purchases</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {purchases.length === 0 ? (
-              <p className="text-muted-foreground">No purchases yet</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Solution Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Devices</TableHead>
-                    <TableHead>Base Price</TableHead>
-                    <TableHead>Total Price</TableHead>
-                    <TableHead>Purchase Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {purchases.map((purchase) => (
-                    <TableRow key={purchase.id}>
-                      <TableCell className="font-medium">{purchase.solution_name}</TableCell>
-                      <TableCell>{purchase.solution_type}</TableCell>
-                      <TableCell>{purchase.device_count}</TableCell>
-                      <TableCell>${purchase.base_price.toFixed(2)}</TableCell>
-                      <TableCell className="font-semibold">${purchase.total_price.toFixed(2)}</TableCell>
-                      <TableCell>{new Date(purchase.purchase_date).toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+          {/* Total Purchases */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-600">
+                Total Purchases
+              </h3>
+              <div className="p-2 bg-blue-50 rounded">
+                {/* <DollarSign className="w-5 h-5 text-blue-600" /> */}
+                <IndianRupee className="w-5 h-5 text-gray-600" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold  mb-1">₹2,500.00</div>
+            <p className="text-xs text-gray-500">
+              Across all solutions & products
+            </p>
+          </div>
+
+          {/* Pending Orders */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-600">
+                Pending Orders
+              </h3>
+              <div className="p-2 bg-orange-50 rounded">
+                <FileText className="w-5 h-5 text-gray-600" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold mb-1">
+              {ordersData
+                ? ordersData.filter((order) => !order.is_assigned).length
+                : "..."}
+            </div>
+            <p className="text-xs text-gray-500">
+              Awaiting payment or delivery
+            </p>
+          </div>
+
+          {/* Available Credits */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-600">
+                Total Devices
+              </h3>
+              <div className="p-2 bg-green-50 rounded">
+                {/* <CreditCard className="w-5 h-5 text-green-600" /> */}
+                <Cpu className="w-5 h-5 text-gray-600" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold mb-1">
+              {ordersData?.length || "..."}
+            </div>
+            <p className="text-xs text-gray-500">
+              Across all solutions & products
+            </p>
+          </div>
+        </div>
+
+        {/* Recent Orders Table */}
+        <div className="bg-white rounded-lg border border-gray-200 mb-8">
+          <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900">
+              Customers Details
+            </h2>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="border rounded-md px-3 py-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300"
+            >
+              Add Device
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            {!ordersData && (
+              <div className="p-4 text-center text-gray-500">
+                Loading devices...
+              </div>
             )}
-          </CardContent>
-        </Card>
+            {ordersData && ordersData.length === 0 && (
+              <div>
+                <div className="p-4 text-center text-gray-500">
+                  No devices found.
+                </div>
+              </div>
+            )}
+            {ordersData && ordersData.length > 0 && (
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Created At
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Device Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Device Type
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Credentials
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
 
-        {/* Subscriptions Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Active Subscriptions
-            </CardTitle>
-            <CardDescription>Monitor your subscription status and deadlines</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {subscriptions.length === 0 ? (
-              <p className="text-muted-foreground">No active subscriptions</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>End Date</TableHead>
-                    <TableHead>Days Remaining</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {subscriptions.map((subscription) => {
-                    const daysRemaining = calculateDaysRemaining(subscription.end_date);
-                    return (
-                      <TableRow key={subscription.id}>
-                        <TableCell className="font-medium">{subscription.subscription_type}</TableCell>
-                        <TableCell>{new Date(subscription.start_date).toLocaleDateString()}</TableCell>
-                        <TableCell>{new Date(subscription.end_date).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <span className={daysRemaining < 30 ? "text-destructive font-semibold" : ""}>
-                            {daysRemaining > 0 ? `${daysRemaining} days` : "Expired"}
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {ordersData &&
+                    ordersData.map((order) => (
+                      <tr
+                        key={order.created_at}
+                        className="hover:bg-gray-50 transition"
+                      >
+                        <td className="px-6 py-2 text-sm font-medium text-gray-900">
+                          {toLocalIST(order.created_at)}
+                        </td>
+                        <td className="px-6 py-2 text-sm text-gray-700">
+                          {order.device_name}
+                        </td>
+                        <td className="px-6 py-2 text-sm text-gray-700">
+                          {order.type}
+                        </td>
+                        <td className="px-6 py-2 text-sm text-blue-600">
+                          <button
+                            onClick={() => openCreds(order.credentials)}
+                            className="underline hover:text-blue-800"
+                          >
+                            View Credentials
+                          </button>
+                        </td>
+                        <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <span
+                            className={`px-3 py-1 inline-flex text-xs leading-5 font-medium rounded-full
+      ${
+        !order.is_assigned
+          ? "bg-yellow-100 text-yellow-700" // Pending
+          : order.is_active
+          ? "bg-green-100 text-green-700" // Active
+          : "bg-red-100 text-red-700" // Inactive
+      }
+    `}
+                          >
+                            {!order.is_assigned
+                              ? "Pending"
+                              : order.is_active
+                              ? "Active"
+                              : "Inactive"}
                           </span>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={subscription.is_active && daysRemaining > 0 ? "default" : "destructive"}>
-                            {subscription.is_active && daysRemaining > 0 ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* Devices Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Server className="h-5 w-5" />
-              My Devices
-            </CardTitle>
-            <CardDescription>View all allocated devices</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {devices.length === 0 ? (
-              <p className="text-muted-foreground">No devices allocated yet</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Device Name</TableHead>
-                    <TableHead>Serial Number</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Allocated Date</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {devices.map((device) => (
-                    <TableRow key={device.id}>
-                      <TableCell className="font-medium">{device.device_name}</TableCell>
-                      <TableCell>{device.device_serial}</TableCell>
-                      <TableCell>
-                        <Badge variant={device.status === "active" ? "default" : "secondary"}>
-                          {device.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(device.allocated_date).toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </main>
+        {/* Credentials Modal */}
+        {showModal && selectedCreds && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl w-80 shadow-lg">
+              <h2 className="text-xl font-semibold mb-4">Credentials</h2>
+
+              {/* Username */}
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-600">
+                  Username
+                </label>
+                <input
+                  className="mt-1 w-full p-2 border rounded-lg bg-gray-50 text-gray-800"
+                  value={selectedCreds.userName}
+                  onChange={(e) =>
+                    setSelectedCreds({
+                      ...selectedCreds,
+                      userName: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              {/* Password */}
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-600">
+                  Password
+                </label>
+                <div className="mt-1 flex items-center p-2 border rounded-lg bg-gray-50">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={selectedCreds.password}
+                    className="bg-transparent w-full outline-none"
+                    onChange={(e) =>
+                      setSelectedCreds({
+                        ...selectedCreds,
+                        password: e.target.value,
+                      })
+                    }
+                  />
+
+                  <button
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="ml-2 text-gray-600 hover:text-gray-900"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <div className="flex gap-3">
+                <button
+                  className="mt-3 w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900"
+                  onClick={() => updateCreds()}
+                >
+                  Save
+                </button>
+                <button
+                  className="mt-3 w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900"
+                  onClick={() => setShowModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Add Device Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-xl w-96 shadow-lg">
+              <h2 className="text-xl font-semibold mb-4">Add New Device</h2>
+
+              {/* Device Name */}
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-600">
+                  Device Name
+                </label>
+                <input
+                  type="text"
+                  value={newDevice.name}
+                  onChange={(e) =>
+                    setNewDevice({ ...newDevice, name: e.target.value })
+                  }
+                  className="mt-1 w-full p-2 border rounded-lg bg-gray-50 outline-none"
+                  placeholder="Enter device name"
+                />
+              </div>
+
+              {/* Username */}
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-600">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  value={newDevice.username}
+                  onChange={(e) =>
+                    setNewDevice({ ...newDevice, username: e.target.value })
+                  }
+                  className="mt-1 w-full p-2 border rounded-lg bg-gray-50 outline-none"
+                  placeholder="Enter username"
+                />
+              </div>
+
+              {/* Password */}
+              <div className="mb-4">
+                <label className="text-sm font-medium text-gray-600">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={newDevice.password}
+                  onChange={(e) =>
+                    setNewDevice({ ...newDevice, password: e.target.value })
+                  }
+                  className="mt-1 w-full p-2 border rounded-lg bg-gray-50 outline-none"
+                  placeholder="Enter password"
+                />
+              </div>
+
+              {/* Save Button */}
+              <button
+                onClick={saveDevice}
+                className="mt-3 w-full bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900"
+              >
+                Save Device
+              </button>
+
+              {/* Cancel */}
+              <button
+                className="mt-2 w-full bg-gray-200 text-gray-900 py-2 rounded-lg hover:bg-gray-300"
+                onClick={() => setShowAddModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default CustomerDashboard;

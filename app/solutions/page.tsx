@@ -1,15 +1,17 @@
-'use client';
+"use client";
 
 import React from "react";
-import { Navbar } from "@/components/Navbar";
+import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MessageSquare, FileText } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const Solutions = () => {
+  const router = useRouter();
   const solutions = [
     {
       id: "ems",
@@ -21,7 +23,7 @@ const Solutions = () => {
       price: 49999,
     },
     {
-      id: "water-management",
+      id: "wms",
       name: "Water Management System",
       description:
         "Intelligent water monitoring and management solution that helps organizations optimize water usage, detect leaks, and ensure water quality.",
@@ -69,9 +71,7 @@ const Solutions = () => {
   ];
 
   const handleGetQuotation = (solution: (typeof solutions)[0]) => {
-    toast("Quotation Generated", {
-      description: `Quotation for ${solution.name}: ₹${solution.price.toLocaleString()}`,
-    });
+    router.push(`/quotation?solution=${solution.id}`);
   };
 
   const handleEnquire = (solution: (typeof solutions)[0]) => {
@@ -81,28 +81,21 @@ const Solutions = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero">
-      <Navbar />
-
-      <div className="container mx-auto px-4 py-16 max-w-7xl">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold mb-4">
-            Explore Our{" "}
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
-              IoT Solutions
-            </span>
+    <div className="min-h-screen bg-gradient-hero flex items-center">
+      <div>
+        <Sidebar />
+      </div>
+      <div className="w-full p-8 ">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Solutions
           </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover powerful, ready-to-deploy IoT systems for monitoring,
-            automation, and operational excellence.
-          </p>
         </div>
-
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
           {solutions.map((solution) => (
             <Card
               key={solution.id}
-              className="overflow-hidden border-2 hover:shadow-xl transition-all duration-300"
+              className="overflow-hidden border-2 hover:shadow-xl transition-all duration-300 rounded-lg"
             >
               <div className="relative w-full h-56">
                 <Image
@@ -124,17 +117,11 @@ const Solutions = () => {
                   {solution.description}
                 </p>
 
-                <div className="pt-4 border-t">
-                  <p className="text-sm text-gray-500">Starting from</p>
-                  <p className="text-3xl font-bold text-primary">
-                    ₹{solution.price.toLocaleString()}
-                  </p>
-                </div>
 
                 <div className="flex flex-col gap-3 pt-4">
                   <Button
                     onClick={() => handleGetQuotation(solution)}
-                    className="w-full bg-gradient-primary"
+                    className="w-full bg-gradient-primary cursor-pointer"
                   >
                     <FileText className="mr-2" />
                     Get Quotation

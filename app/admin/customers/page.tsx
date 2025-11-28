@@ -1,19 +1,52 @@
-'use client';
+import React from "react";
 import AdminNavbar from "@/components/AdminNavbar";
-import {
-  Cpu,
-  FileText,
-  IndianRupee,
-  Settings,
-  ShoppingCart,
-  Users,
-} from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { IndianRupee, Settings, ShoppingCart, Users } from "lucide-react";
 
 const page = () => {
- 
-  
-  
+  const orders = [
+    {
+      id: "C001",
+      customer: "Alpha Corp",
+      customerInfo:"alpha@info.com",
+      solutionsBought:"WMS",
+      status: "Completed",
+    },
+    {
+      id: "C002",
+      customer: "Alpha Corp",
+      customerInfo:"alpha@info.com",
+      solutionsBought:"BusbarTMS",
+      status: "Pending",
+    },
+    {
+      id: "C003",
+      customer: "Alpha Corp",
+      customerInfo:"alpha@info.com",
+      solutionsBought:"EMS",
+      status: "Completed",
+    },
+    {
+      id: "C004",
+      customer: "Alpha Corp",
+      customerInfo:"alpha@info.com",
+      solutionsBought:"BusbarTMS",
+      status: "Pending",
+    },
+    {
+      id: "C005",
+      customer: "Alpha Corp",
+      customerInfo:"alpha@info.com",
+      solutionsBought:"WMS",
+      status: "Cancelled",
+    },
+    {
+      id: "C006",
+      customer: "Alpha Corp",
+      customerInfo:"alpha@info.com",
+      solutionsBought:"EMS",
+      status: "Completed",
+    },
+  ];
   const getStatusColor = (status: any) => {
     switch (status) {
       case "Completed":
@@ -97,35 +130,29 @@ const page = () => {
         <div className="bg-white rounded-lg border border-gray-200 mb-8">
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-900">
-              Solutions Bought
+              Customers Details
             </h2>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full overflow-scroll">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Purchase ID
+                    Customer ID
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Customer
+                    Customer Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Item
+                    Customer Info
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Start Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Expiry Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Status
+                    Solutions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {/* {ordersData && ordersData.map((order) => (
+                {orders.map((order) => (
                   <tr
                     key={order.id}
                     className="hover:bg-gray-50 transition-colors"
@@ -137,15 +164,12 @@ const page = () => {
                       {order.customer}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700">
-                      {order.item}
+                      {order.customerInfo}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {order.createdAt}
+                      {order.solutionsBought}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {order.endDate}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {/* <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       <span
                         className={`px-3 py-1 inline-flex text-xs leading-5 font-medium rounded-full ${getStatusColor(
                           order.status
@@ -153,9 +177,9 @@ const page = () => {
                       >
                         {order.status}
                       </span>
-                    </td>
+                    </td> */}
                   </tr>
-                ))} */}
+                ))}
               </tbody>
             </table>
           </div>
