@@ -30,10 +30,10 @@ export async function POST(request: NextRequest) {
       { message: "✅ Product added successfully", product: result.rows[0] },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error inserting product:", error);
     return NextResponse.json(
-      { error: "Failed to add product", details: error.message },
+      { error: "Failed to add product", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }
@@ -51,7 +51,7 @@ export async function PUT(request: NextRequest) {
 
     // Build dynamic update query based on provided fields
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: (string | number | string[])[] = [];
     let paramCount = 1;
 
     if (name !== undefined) {
@@ -109,10 +109,10 @@ export async function PUT(request: NextRequest) {
       { message: "✅ Product updated successfully", product: result.rows[0] },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating product:", error);
     return NextResponse.json(
-      { error: "Failed to update product", details: error.message },
+      { error: "Failed to update product", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }
@@ -146,10 +146,10 @@ export async function DELETE(request: NextRequest) {
       { message: "Product deleted successfully", product: result.rows[0] },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting product:", error);
     return NextResponse.json(
-      { error: "Failed to delete product", details: error.message },
+      { error: "Failed to delete product", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

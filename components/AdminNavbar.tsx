@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, LogOut, Home, Briefcase, Package, Phone, ShoppingBagIcon, Settings } from 'lucide-react';
+import { Menu, X, User, LogOut, Home, Briefcase, Package, Phone, ShoppingBagIcon, Settings, CreditCard, ReceiptIndianRupee } from 'lucide-react';
 import { useState } from 'react';
 import {
   DropdownMenu,
@@ -25,6 +25,9 @@ const Sidebar = () => {
     { name: 'Dashboard', path: '/admin', icon: Home },
     { name: 'Customers', path: '/admin/customers', icon: User },
     { name: 'Devices', path: '/admin/devices', icon: Settings },
+    { name: 'Licenses', path: '/admin/licenses', icon: Briefcase },
+    { name: 'Payments', path: '/admin/payments', icon: CreditCard },
+    { name: 'Bills', path: '/admin/bills', icon: ReceiptIndianRupee },
   ];
 
   const handleLogout = () => {

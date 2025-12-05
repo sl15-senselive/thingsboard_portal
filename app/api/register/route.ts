@@ -1,3 +1,4 @@
+import { pool } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -88,6 +89,7 @@ export async function POST(request: Request) {
     }
 
     const customerResult = await resCustomer.json();
+    console.log(customerResult);
     const customerId = customerResult.id;
     console.log(customerId);
 
@@ -101,7 +103,8 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
+    const addCustomerToDB = await pool.query('INSERT INTO customers (customer_id, company_name) VALUES ($1, $2)', [customerId.id, customerResult.title]);
+    
     /* ------------------------------------------------------------
      * STEP 3: CREATE USER FOR CUSTOMER
      * ------------------------------------------------------------ */
@@ -144,7 +147,6 @@ export async function POST(request: Request) {
     }
 
     const userResult = await resUser.json();
-
     /* ------------------------------------------------------------
      * SUCCESS RESPONSE
      * ------------------------------------------------------------ */

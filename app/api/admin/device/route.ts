@@ -107,6 +107,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // 1) LOGIN
     const resLogin = await fetch(
       "https://dashboard.senselive.io/api/auth/login",
       {
@@ -133,58 +134,108 @@ export async function GET(request: NextRequest) {
     const loginData = await resLogin.json();
     const token = loginData.token;
 
-    const res = await pool.query(
-      "SELECT * FROM device ORDER BY created_at DESC"
-    );
-    const devices = res.rows;
+    // -------------------------------------------------------------
+    // 2) Fetch ALL devices from ThingsBoard (auto pagination)
+    // -------------------------------------------------------------
+    let page = 0;
+    let hasNext = true;
+    const allDevices: any[] = [];
 
+    while (hasNext) {
+      const resDevices = await fetch(
+        `https://dashboard.senselive.io/api/tenant/devices?pageSize=100&page=${page}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const json = await resDevices.json();
+      
+      // console.log("TB PAGE RESPONSE:", json); // debug
+
+      let devicesPage = [];
+
+      // Case 1: Normal TB format
+      if (Array.isArray(json.data)) {
+        devicesPage = json.data;
+
+        if (typeof json.hasNext === "boolean") {
+          hasNext = json.hasNext;
+        } else if (typeof json.pageDataFull === "boolean") {
+          hasNext = !json.pageDataFull;
+        } else {
+          hasNext = false; // fallback
+        }
+      }
+
+      // Case 2: Some TB servers return whole list directly
+      else if (Array.isArray(json)) {
+        devicesPage = json;
+        hasNext = false;
+      }
+
+      // Case 3: Unexpected TB response
+      else {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Unexpected ThingsBoard response format",
+            response: json,
+          },
+          { status: 500 }
+        );
+      }
+
+      allDevices.push(...devicesPage);
+      page++;
+    }
+
+    // -------------------------------------------------------------
+    // 3) ENRICH each device (customer + creds)
+    // -------------------------------------------------------------
     const enrichedDevices = await Promise.all(
-      devices.map(async (d) => {
+      allDevices.map(async (d) => {
         try {
+          // A) Device details
           const deviceRes = await fetch(
-            `https://dashboard.senselive.io/api/device/${d.device_id}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+            `https://dashboard.senselive.io/api/device/${d.id.id}`,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           const deviceInfo = await deviceRes.json();
 
-          // B) Customer info
-          const customerRes = await fetch(
-            `https://dashboard.senselive.io/api/customer/${d.customer_id}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          const customerInfo = await customerRes.json();
+          // B) Customer
+          let customerName = "Unassigned";
+          if (d.customerId?.id) {
+            const custRes = await fetch(
+              `https://dashboard.senselive.io/api/customer/${d.customerId.id}`,
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            const customerInfo = await custRes.json();
+            customerName = customerInfo.title;
+          }
 
           // C) Credentials
           const credsRes = await fetch(
-            `https://dashboard.senselive.io/api/device/${d.device_id}/credentials`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
+            `https://dashboard.senselive.io/api/device/${d.id.id}/credentials`,
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           const creds = await credsRes.json();
 
           return {
-            ...d,
-            created_at: d.created_at,
+            device_id: d.id.id,
+            created_time: d.createdTime,
             device_name: deviceInfo.name,
-            customer_name: customerInfo.title,
+            customer_id: d.customerId?.id || null,
+            customer_name: customerName,
             credentials: creds.credentialsValue,
           };
-
         } catch (err) {
-          console.log("TB fetch error:", err);
+          console.log("Error enriching device:", err);
           return { ...d, tb_error: "Failed to fetch TB data" };
         }
       })
     );
-    console.log(enrichedDevices);
 
     return NextResponse.json(
-      { success: true, data: enrichedDevices },
+      { success: true, count: enrichedDevices.length, data: enrichedDevices },
       { status: 200 }
     );
   } catch (error) {

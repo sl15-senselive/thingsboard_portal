@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           id: {
-            id: token,
+            id: id,
           },
           deviceId: {
             id: id,

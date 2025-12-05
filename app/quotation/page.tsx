@@ -6,7 +6,7 @@ import { Sidebar } from "@/components/Sidebar";
 import EMS_Quotation from "@/components/EMS_Quotation";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import WMS_Quotation from "@/components/WMS_Quotation";
+// import WMS_Quotation from "@/components/WMS_Quotation";
 
 // Separate component that uses useSearchParams (needs Suspense)
 function SolutionContent() {
@@ -19,7 +19,10 @@ function SolutionContent() {
       {solutionId === "ems" ? (
         <EMS_Quotation />
       ) : solutionId === "wms" ? (
-        <WMS_Quotation />
+        <div>
+
+        </div>
+        // <WMS_Quotation />
       ) : (
         <div className="text-center text-gray-500">
           <p>No solution selected or unsupported solution.</p>

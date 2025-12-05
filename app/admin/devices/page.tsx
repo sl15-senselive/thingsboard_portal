@@ -14,28 +14,45 @@ import { toast } from "sonner";
 
 const Page = () => {
   const [ordersData, setOrdersData] = useState<any[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     fetchDevices();
   }, []);
 
-  function toLocalIST(timestamp: string) {
+  function toLocalISTDate(timestamp: number) {
     const date = new Date(timestamp);
 
     if (isNaN(date.getTime())) return "Invalid timestamp";
 
-    return date.toLocaleString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
+    const day = String(
+      new Intl.DateTimeFormat("en-IN", {
+        day: "2-digit",
+        timeZone: "Asia/Kolkata",
+      }).format(date)
+    );
+
+    const month = String(
+      new Intl.DateTimeFormat("en-IN", {
+        month: "2-digit",
+        timeZone: "Asia/Kolkata",
+      }).format(date)
+    );
+
+    const year = String(
+      new Intl.DateTimeFormat("en-IN", {
+        year: "numeric",
+        timeZone: "Asia/Kolkata",
+      }).format(date)
+    );
+
+    return `${day}/${month}/${year}`;
   }
+
   async function fetchDevices() {
     try {
+      setLoading(true);
+
       const res = await fetch("/api/admin/device", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -43,53 +60,30 @@ const Page = () => {
 
       if (!res.ok) {
         toast.error("Failed to fetch devices");
+        setOrdersData([]);
         return;
       }
 
       const { data } = await res.json();
-      console.log(data);
 
-      // ⭐ Sort by createdAt (newest → oldest)
       const sorted = data?.sort(
-        (a: any, b: any) => Number(b.created_at) - Number(a.created_at)
+        (a: any, b: any) => Number(b.created_time) - Number(a.created_time)
       );
 
       setOrdersData(sorted);
-      console.log("Sorted Devices:", sorted);
     } catch (error) {
       console.error(error);
+      setOrdersData([]);
+    } finally {
+      setLoading(false);
     }
   }
-  async function assign(deviceId: string, customerId: string) {
-    try {
-      const res = await fetch("/api/admin/device/assign", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId, customerId }),
-      });
 
-      if (!res.ok) {
-        toast.error("Failed to assign device");
-        return;
-      }
-
-      const { message } = await res.json();
-      toast.success(message || "Device assigned successfully");
-
-      // Refresh device list
-      fetchDevices();
-    } catch (error) {
-      console.error(error);
-      toast.error("An error occurred while assigning device");
-    }
-  }
   const [showModal, setShowModal] = React.useState(false);
   const [selectedCreds, setSelectedCreds] = React.useState<any>(null);
   const [showPassword, setShowPassword] = React.useState(false);
 
   function openCreds(creds: any) {
-    // console.log(JSON.parse(creds));
-
     setSelectedCreds(JSON.parse(creds));
     setShowPassword(false);
     setShowModal(true);
@@ -157,7 +151,7 @@ const Page = () => {
             </h2>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto transition-all duration-700 ease-in-out">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -171,43 +165,60 @@ const Page = () => {
                     Customer Info
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Assign
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Credentials
                   </th>
                 </tr>
               </thead>
 
               <tbody className="bg-white divide-y divide-gray-200">
-                {ordersData &&
+
+                {/* Loading Skeleton */}
+                {loading &&
+                  [1, 2, 3, 4].map((i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-40 bg-gray-200 rounded"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 w-28 bg-gray-200 rounded"></div>
+                      </td>
+                    </tr>
+                  ))}
+
+                {/* No Data */}
+                {!loading && ordersData?.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="text-center py-6 text-gray-500 text-sm"
+                    >
+                      No device records found
+                    </td>
+                  </tr>
+                )}
+
+                {/* Actual Data */}
+                {!loading &&
+                  ordersData &&
                   ordersData.map((order) => (
                     <tr
-                      key={order.created_at}
+                      key={order.created_time}
                       className="hover:bg-gray-50 transition"
                     >
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {toLocalIST(order.created_at)}
+                        {toLocalISTDate(order.created_time)}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {order.device_name}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {order.customer_name}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {order.is_assigned ? (
-                          `Assigned`
-                        ) : (
-                          <button
-                            className="bg-blue-600 text-white px-3 py-1 font-semibold rounded"
-                            onClick={() =>
-                              assign(order.device_id, order.customer_id)
-                            }
-                          >
-                            Assign
-                          </button>
-                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-blue-600">
                         <button
@@ -224,6 +235,8 @@ const Page = () => {
           </div>
         </div>
       </div>
+
+      {/* Credentials Modal */}
       {showModal && selectedCreds && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl w-80 shadow-lg">
@@ -271,7 +284,6 @@ const Page = () => {
           </div>
         </div>
       )}
-      {/* Add Device Modal */}
     </div>
   );
 };
