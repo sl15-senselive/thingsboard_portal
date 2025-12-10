@@ -126,10 +126,11 @@ export async function POST(req: NextRequest) {
     const customer_name = await getTbCustomerNameById(await getTbToken(), customer_id)
     const paymentsResult = await pool.query(
       `
-      INSERT INTO payments (customer_id, customer_name, price, license_id)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO payments (customer_id, customer_name, price, license_id,expiry_date)
+      VALUES ($1, $2, $3, $4,$5)
+      RETURNING *;
       `,
-      [customer_id, customer_name, license.price, license_id] 
+      [customer_id, customer_name, license.price, license_id, new Date(Date.now() + 365*24*60*60*1000)] 
     );
     
     if (paymentsResult.rowCount === 0) {

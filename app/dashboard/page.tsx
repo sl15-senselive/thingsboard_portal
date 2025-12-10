@@ -179,7 +179,7 @@ const CustomerDashboard = () => {
         return;
       }
       const { data } = await res.json();
-      
+
       // Calculate licenses in frontend
       calculateLicenses(data);
     } catch (e) {
@@ -238,13 +238,12 @@ const CustomerDashboard = () => {
 
       toast.success("Device added successfully!");
       setShowAddModal(false);
-      
+
       // Reset form
       setNewDevice({ name: "", username: "", password: "" });
-      
+
       // Refresh data
       await Promise.all([fetchDevices(), fetchLicense()]);
-      
     } catch (error) {
       toast.error("Error adding device");
       console.error(error);
@@ -309,10 +308,11 @@ const CustomerDashboard = () => {
               </div>
             </div>
             <div className="text-3xl font-bold mb-1">
-              {remainingLicense !== null ? remainingLicense : "..."}
+              {remainingLicense !== null ? remainingLicense : "-"}
             </div>
             <p className="text-xs text-gray-500">
-              {totalLicense > 0 && `${usedLicense} used of ${totalLicense} total`}
+              {totalLicense > 0 &&
+                `${usedLicense} used of ${totalLicense} total`}
             </p>
           </div>
 
@@ -326,9 +326,7 @@ const CustomerDashboard = () => {
                 <Cpu className="w-5 h-5 text-gray-600" />
               </div>
             </div>
-            <div className="text-3xl font-bold mb-1">
-              {ordersData?.length || "..."}
-            </div>
+            <div className="text-3xl font-bold mb-1">{ordersData?.length}</div>
             <p className="text-xs text-gray-500">
               Across all solutions & products
             </p>
@@ -497,7 +495,7 @@ const CustomerDashboard = () => {
             </div>
           </div>
         )}
-        
+
         {/* Add Device Modal */}
         {showAddModal &&
           (remainingLicense === null ? (
@@ -597,7 +595,8 @@ const CustomerDashboard = () => {
                 </h2>
 
                 <p className="text-sm text-gray-600 mb-4">
-                  You have reached your device license limit. Please purchase more licenses to add additional devices.
+                  You have reached your device license limit. Please purchase
+                  more licenses to add additional devices.
                 </p>
 
                 {/* Close Button */}

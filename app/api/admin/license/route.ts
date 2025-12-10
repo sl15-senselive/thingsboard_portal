@@ -83,7 +83,9 @@ async function getCustomerName(customerId: string) {
 export async function GET() {
   try {
     const result = await pool.query(
-      "SELECT * FROM licenses ORDER BY purchased_time DESC"
+      `SELECT 
+        *
+      FROM licenses`
     );
 
     const rows = result.rows;

@@ -14,7 +14,12 @@ const Page = () => {
     try {
       const res = await fetch("/api/payment");
       const { payments } = await res.json();
-      setPayments(payments);
+      const sortedPayments = payments.sort((a: any, b: any) => {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return dateB - dateA;
+      });
+      setPayments(sortedPayments);
     } catch (err) {
       console.error("Error fetching payments:", err);
     } finally {
@@ -43,13 +48,13 @@ const Page = () => {
 
   async function payBill(id: string) {
     try {
-      const res = await fetch("/api/payments", {
+      const res = await fetch("/api/payment", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
-
-      await res.json();
+      console.log(res.json());
+       
       fetchPayments();
     } catch (err) {
       console.error("Payment Failed", err);
@@ -77,19 +82,13 @@ const Page = () => {
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Customer Name</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Price</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Created At</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Expiry Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Next Payment</th>
                   <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Action</th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-200">
                 {payments.map((p) => {
-                  const expiryDate = new Date(p.created_at);
-                  expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-
-                  const expiryStr = expiryDate.toISOString();
-
                   return (
                     <tr key={p.id}>
                       <td className="px-6 py-4 text-sm text-gray-900">{p.customer_name}</td>
@@ -100,16 +99,8 @@ const Page = () => {
                         {formatDate(p.created_at)}
                       </td>
 
-                      <td className={`px-6 py-4 text-sm ${getExpiryColor(expiryStr)}`}>
-                        {formatDate(expiryStr)}
-                      </td>
-
-                      <td className="px-6 py-4 text-sm">
-                        {p.is_paid ? (
-                          <span className="text-green-600 font-semibold">Paid</span>
-                        ) : (
-                          <span className="text-red-600 font-semibold">Unpaid</span>
-                        )}
+                      <td className={`px-6 py-4 text-sm ${getExpiryColor(p.expiry_date)}`}>
+                        {formatDate(p.expiry_date)}
                       </td>
 
                       <td className="px-6 py-4 text-sm">
@@ -118,7 +109,7 @@ const Page = () => {
                             onClick={() => payBill(p.id)}
                             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                           >
-                            Pay
+                            Pay Now
                           </button>
                         ) : (
                           <span className="text-gray-500">—</span>
