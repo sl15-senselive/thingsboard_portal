@@ -147,7 +147,7 @@ const Page = () => {
         <div className="bg-white rounded-lg border border-gray-200 mb-8">
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-xl font-bold text-gray-900">
-              Customers Details
+              Device Details
             </h2>
           </div>
 

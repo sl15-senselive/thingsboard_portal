@@ -1,9 +1,28 @@
+import { authOptions } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const customer_id = "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0";
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: "No session found" },
+        { status: 401 }
+      );
+    }
+    const user = session.user;
+    // console.log("user",user);
+
+    const customer = await pool.query(
+      "select customer_id from users where _id = $1",
+      [user?.id]
+    );
+    // console.log("customer",customer);
+
+    // const customerId = "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0"
+    const customer_id = customer.rows[0].customer_id;
     const payments = await pool.query(
       "SELECT * FROM payments where customer_id = $1",
       [customer_id]

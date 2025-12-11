@@ -1,10 +1,27 @@
+import { authOptions } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
     const { name, username, password } = await request.json();
-    const customerId = "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0";
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: "No session found" },
+        { status: 401 }
+      );
+    }
+    const user = session.user;
+    // console.log("user",user);
+    
+    const customer = await pool.query("select customer_id from users where _id = $1",[user?.id])
+    // console.log("customer",customer);
+    
+    // const customerId = "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0"
+    const customerId = customer.rows[0].customer_id
+    // const customerId = "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0";
 
     // Step 0 — Check and assign license
     const licenseResult = await pool.query(
@@ -201,7 +218,23 @@ export async function GET() {
       );
     }
 
-    const customerId = "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0";
+    // const customerId = "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0";
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: "No session found" },
+        { status: 401 }
+      );
+    }
+    const user = session.user;
+    // console.log("user",user);
+    
+    const customer = await pool.query("select customer_id from users where _id = $1",[user?.id])
+    // console.log("customer",customer);
+    
+    // const customerId = "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0"
+    const customerId = customer.rows[0].customer_id
+    // console.log("customerId",customerId);
 
     // Step 2 — GET ALL DEVICES
     const res = await fetch(

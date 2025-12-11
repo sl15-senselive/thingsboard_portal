@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
-import { CartProvider } from "@/context/cartContext";
 import { SessionProvider } from "next-auth/react";
 import { Providers } from "./providers";
 import { Sidebar } from "@/components/Sidebar";

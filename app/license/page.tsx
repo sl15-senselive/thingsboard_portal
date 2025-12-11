@@ -73,7 +73,6 @@ export default function Page() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          customer_id: "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0",
           package_name: pkg.name,
           total_license: parseInt(pkg.license),
           used_license: 0,

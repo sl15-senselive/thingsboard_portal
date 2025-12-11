@@ -54,7 +54,7 @@ const Page = () => {
         body: JSON.stringify({ id }),
       });
       console.log(res.json());
-       
+
       fetchPayments();
     } catch (err) {
       console.error("Payment Failed", err);
@@ -79,11 +79,21 @@ const Page = () => {
             <table className="min-w-full bg-white shadow rounded-lg overflow-hidden">
               <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Customer Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Created At</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Next Payment</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Action</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                    Customer Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                    Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                    Created At
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                    Next Payment
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">
+                    Action
+                  </th>
                 </tr>
               </thead>
 
@@ -91,28 +101,43 @@ const Page = () => {
                 {payments.map((p) => {
                   return (
                     <tr key={p.id}>
-                      <td className="px-6 py-4 text-sm text-gray-900">{p.customer_name}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        {p.customer_name}
+                      </td>
 
-                      <td className="px-6 py-4 text-sm text-gray-700">₹{p.price}</td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        ₹{p.price}
+                      </td>
 
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {formatDate(p.created_at)}
                       </td>
 
-                      <td className={`px-6 py-4 text-sm ${getExpiryColor(p.expiry_date)}`}>
+                      <td
+                        className={`px-6 py-4 text-sm ${getExpiryColor(
+                          p.expiry_date
+                        )}`}
+                      >
                         {formatDate(p.expiry_date)}
                       </td>
 
                       <td className="px-6 py-4 text-sm">
                         {!p.is_paid ? (
-                          <button
-                            onClick={() => payBill(p.id)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                          >
-                            Pay Now
-                          </button>
+                          <div className="space-y-1 flex flex-col items-start">
+                            <button
+                              onClick={() => payBill(p.id)}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            >
+                              Pay Now
+                            </button>
+
+                            <p className="text-xs text-gray-600 max-w-[180px] leading-relaxed">
+                              Paying will increase your license expiry date to 1
+                              year.
+                            </p>
+                          </div>
                         ) : (
-                          <span className="text-gray-500">—</span>
+                          <span className="text-gray-400">—</span>
                         )}
                       </td>
                     </tr>

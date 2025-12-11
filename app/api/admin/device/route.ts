@@ -221,6 +221,7 @@ export async function GET(request: NextRequest) {
 
           return {
             device_id: d.id.id,
+            status: d.status,
             created_time: d.createdTime,
             device_name: deviceInfo.name,
             customer_id: d.customerId?.id || null,
