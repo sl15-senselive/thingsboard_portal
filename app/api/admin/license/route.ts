@@ -1,57 +1,24 @@
+import { authOptions } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-/* -------------------------------------------------------
-    TOKEN CACHE
--------------------------------------------------------- */
-let cachedToken: string | null = null;
-let tokenExpiresAt: number = 0; // timestamp in ms
+async function getTbToken(): Promise<string> {
+  const session = await getServerSession(authOptions);
 
-/* -------------------------------------------------------
-    LOGIN TO THINGSBOARD (WITH CACHING)
--------------------------------------------------------- */
-async function getTbToken() {
-  const now = Date.now();
-
-  // ⭐ Reuse token if still valid (TB token expires in 15min)
-  if (cachedToken && now < tokenExpiresAt) {
-    return cachedToken;
+  if (!session) {
+    throw new Error("No session found");
   }
 
-  try {
-    const res = await fetch("https://dashboard.senselive.io/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: process.env.SENSELIVE_API_USER,
-        password: process.env.SENSELIVE_API_PASSWORD,
-      }),
-    });
+  const token = session.user?.tb_token;
 
-    if (!res.ok) {
-      console.error("❌ ThingsBoard Login Failed");
-      cachedToken = null;
-      return null;
-    }
-
-    const json = await res.json();
-    cachedToken = json.token;
-
-    // TB token validity = 15 minutes → set expiry at 14min for safe refresh
-    tokenExpiresAt = Date.now() + 14 * 60 * 1000;
-
-    console.log("🔐 New TB token fetched");
-    return cachedToken;
-  } catch (error) {
-    console.error("❌ TB Login Error:", error);
-    cachedToken = null;
-    return null;
+  if (!token) {
+    throw new Error("TB token missing in session");
   }
+
+  return token;
 }
 
-/* -------------------------------------------------------
-    FETCH CUSTOMER NAME
--------------------------------------------------------- */
 async function getCustomerName(customerId: string) {
   try {
     const token = await getTbToken();
@@ -111,9 +78,7 @@ export async function GET() {
   }
 }
 
-/* -------------------------------------------------------
-    ASSIGN LICENSE
--------------------------------------------------------- */
+
 export async function PUT(req: NextRequest) {
   try {
     const { id } = await req.json();

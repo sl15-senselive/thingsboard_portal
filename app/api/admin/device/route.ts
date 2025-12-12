@@ -1,4 +1,6 @@
+import { authOptions } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 // ---------------- POST ----------------
@@ -6,32 +8,15 @@ export async function POST(request: NextRequest) {
   try {
     const { name, username, password } = await request.json();
 
-    // Step 1 — LOGIN
-    const resLogin = await fetch(
-      "https://dashboard.senselive.io/api/auth/login",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: process.env.SENSELIVE_API_USER,
-          password: process.env.SENSELIVE_API_PASSWORD,
-        }),
-      }
-    );
-
-    if (!resLogin.ok) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Login failed",
-          details: await resLogin.text(),
-        },
-        { status: resLogin.status }
+        { success: false, message: "No session found" },
+        { status: 401 }
       );
     }
-
-    const loginData = await resLogin.json();
-    const token = loginData.token;
+    const user = session.user;
+    const token = session.user.tb_token;
 
     if (!token) {
       return NextResponse.json(
@@ -107,35 +92,17 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // 1) LOGIN
-    const resLogin = await fetch(
-      "https://dashboard.senselive.io/api/auth/login",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: process.env.SENSELIVE_API_USER,
-          password: process.env.SENSELIVE_API_PASSWORD,
-        }),
-      }
-    );
-
-    if (!resLogin.ok) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Login failed",
-          details: await resLogin.text(),
-        },
-        { status: resLogin.status }
+        { success: false, message: "No session found" },
+        { status: 401 }
       );
     }
-
-    const loginData = await resLogin.json();
-    const token = loginData.token;
-
+    const user = session.user;
+    const token = session.user.tb_token;
     // -------------------------------------------------------------
-    // 2) Fetch ALL devices from ThingsBoard (auto pagination)
+    // 2) Fetch ALL devices with state included (SUPER OPTIMIZED)
     // -------------------------------------------------------------
     let page = 0;
     let hasNext = true;
@@ -143,65 +110,30 @@ export async function GET(request: NextRequest) {
 
     while (hasNext) {
       const resDevices = await fetch(
-        `https://dashboard.senselive.io/api/tenant/devices?pageSize=100&page=${page}`,
+        `https://dashboard.senselive.io/api/tenant/devices?fetch=true&pageSize=100&page=${page}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const json = await resDevices.json();
-      
-      // console.log("TB PAGE RESPONSE:", json); // debug
 
-      let devicesPage = [];
-
-      // Case 1: Normal TB format
       if (Array.isArray(json.data)) {
-        devicesPage = json.data;
+        allDevices.push(...json.data);
 
-        if (typeof json.hasNext === "boolean") {
-          hasNext = json.hasNext;
-        } else if (typeof json.pageDataFull === "boolean") {
-          hasNext = !json.pageDataFull;
-        } else {
-          hasNext = false; // fallback
-        }
-      }
-
-      // Case 2: Some TB servers return whole list directly
-      else if (Array.isArray(json)) {
-        devicesPage = json;
+        hasNext = json.hasNext ?? false;
+      } else {
         hasNext = false;
       }
 
-      // Case 3: Unexpected TB response
-      else {
-        return NextResponse.json(
-          {
-            success: false,
-            message: "Unexpected ThingsBoard response format",
-            response: json,
-          },
-          { status: 500 }
-        );
-      }
-
-      allDevices.push(...devicesPage);
       page++;
     }
 
     // -------------------------------------------------------------
-    // 3) ENRICH each device (customer + creds)
+    // 3) ENRICH device with customer + credentials
     // -------------------------------------------------------------
     const enrichedDevices = await Promise.all(
       allDevices.map(async (d) => {
         try {
-          // A) Device details
-          const deviceRes = await fetch(
-            `https://dashboard.senselive.io/api/device/${d.id.id}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          const deviceInfo = await deviceRes.json();
-
-          // B) Customer
+          // Customer name
           let customerName = "Unassigned";
           if (d.customerId?.id) {
             const custRes = await fetch(
@@ -212,7 +144,7 @@ export async function GET(request: NextRequest) {
             customerName = customerInfo.title;
           }
 
-          // C) Credentials
+          // Credentials
           const credsRes = await fetch(
             `https://dashboard.senselive.io/api/device/${d.id.id}/credentials`,
             { headers: { Authorization: `Bearer ${token}` } }
@@ -221,16 +153,21 @@ export async function GET(request: NextRequest) {
 
           return {
             device_id: d.id.id,
-            status: d.status,
+            device_name: d.name,
             created_time: d.createdTime,
-            device_name: deviceInfo.name,
+
+            // 🌟 NEW: Active state (from fetch=true)
+            active: d.deviceInfo?.active ?? false,
+            last_activity: d.deviceInfo?.lastActivityTime ?? null,
+
             customer_id: d.customerId?.id || null,
             customer_name: customerName,
+
             credentials: creds.credentialsValue,
           };
         } catch (err) {
           console.log("Error enriching device:", err);
-          return { ...d, tb_error: "Failed to fetch TB data" };
+          return { ...d, tb_error: "Failed to fetch" };
         }
       })
     );

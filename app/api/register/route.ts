@@ -1,4 +1,6 @@
+import { authOptions } from "@/lib/auth";
 import { pool } from "@/lib/db";
+import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -20,34 +22,16 @@ export async function POST(request: Request) {
     /* ------------------------------------------------------------
      * STEP 1: LOGIN (Tenant Admin)
      * ------------------------------------------------------------ */
-    const resLogin = await fetch(
-      "https://dashboard.senselive.io/api/auth/login",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: process.env.SENSELIVE_API_USER,
-          password: process.env.SENSELIVE_API_PASSWORD,
-        }),
-      }
-    );
-
-    if (!resLogin.ok) {
-      const error = await resLogin.text();
+    const session = await getServerSession(authOptions);
+    if (!session) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Login failed",
-          details: error,
-          status: resLogin.status,
-        },
-        { status: resLogin.status }
+        { success: false, message: "No session found" },
+        { status: 401 }
       );
     }
-
-    const loginResult = await resLogin.json();
-    const token = loginResult.token;
-    console.log(token);
+    const user = session.user;
+    const token = session.user.tb_token;
+    // console.log(token);
 
     if (!token) {
       return NextResponse.json(
@@ -103,8 +87,11 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-    const addCustomerToDB = await pool.query('INSERT INTO customers (customer_id, company_name) VALUES ($1, $2)', [customerId.id, customerResult.title]);
-    
+    const addCustomerToDB = await pool.query(
+      "INSERT INTO customers (customer_id, company_name) VALUES ($1, $2)",
+      [customerId.id, customerResult.title]
+    );
+
     /* ------------------------------------------------------------
      * STEP 3: CREATE USER FOR CUSTOMER
      * ------------------------------------------------------------ */

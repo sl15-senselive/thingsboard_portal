@@ -69,7 +69,7 @@ const Page = () => {
       const sorted = data?.sort(
         (a: any, b: any) => Number(b.created_time) - Number(a.created_time)
       );
-
+      
       setOrdersData(sorted);
     } catch (error) {
       console.error(error);
@@ -164,6 +164,7 @@ const Page = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Customer Info
                   </th>
+                  
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Credentials
                   </th>
@@ -184,6 +185,8 @@ const Page = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="h-4 w-40 bg-gray-200 rounded"></div>
+                      </td><td className="px-6 py-4">
+                        <div className="h-4 w-28 bg-gray-200 rounded"></div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="h-4 w-28 bg-gray-200 rounded"></div>
@@ -220,6 +223,7 @@ const Page = () => {
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {order.customer_name}
                       </td>
+                      
                       <td className="px-6 py-4 text-sm text-blue-600">
                         <button
                           onClick={() => openCreds(order.credentials)}

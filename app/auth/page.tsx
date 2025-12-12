@@ -43,7 +43,8 @@ const Auth = () => {
     try {
       const formData = new FormData(e.currentTarget);
       const body = Object.fromEntries(formData.entries());
-
+      console.log(body);
+      
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -216,6 +217,17 @@ const Auth = () => {
                           name="email"
                           type="email"
                           placeholder="you@example.com"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="phone_number">Phone Number</Label>
+                        <Input
+                          id="phone_number"
+                          name="phone_number"
+                          type="text"
+                          placeholder="XXXXXXXXX"
                           required
                         />
                       </div>

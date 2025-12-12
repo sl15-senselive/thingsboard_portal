@@ -1,33 +1,19 @@
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   const {id, username, password } = await request.json();
   try {
-    const resLogin = await fetch(
-      "https://dashboard.senselive.io/api/auth/login",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: process.env.SENSELIVE_API_USER,
-          password: process.env.SENSELIVE_API_PASSWORD,
-        }),
-      }
-    );
-
-    if (!resLogin.ok) {
+    const session = await getServerSession(authOptions);
+    if (!session) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Login failed",
-          details: await resLogin.text(),
-        },
-        { status: resLogin.status }
+        { success: false, message: "No session found" },
+        { status: 401 }
       );
     }
-
-    const loginData = await resLogin.json();
-    const token = loginData.token;
+    const user = session.user;
+    const token = session.user.tb_token;
     if (!token) {
       return NextResponse.json(
         {

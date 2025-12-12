@@ -122,23 +122,19 @@ const Page = () => {
                       </td>
 
                       <td className="px-6 py-4 text-sm">
-                        {!p.is_paid ? (
-                          <div className="space-y-1 flex flex-col items-start">
-                            <button
-                              onClick={() => payBill(p.id)}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                            >
-                              Pay Now
-                            </button>
+                        <div className="space-y-1 flex flex-col items-start">
+                          <button
+                            onClick={() => payBill(p.id)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                          >
+                            Pay Now
+                          </button>
 
-                            <p className="text-xs text-gray-600 max-w-[180px] leading-relaxed">
-                              Paying will increase your license expiry date to 1
-                              year.
-                            </p>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
+                          <p className="text-xs text-gray-600 max-w-[180px] leading-relaxed">
+                            Paying will increase your license expiry date to 1
+                            year.
+                          </p>
+                        </div>
                       </td>
                     </tr>
                   );

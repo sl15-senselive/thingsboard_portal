@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
     const user = session.user;
-    // console.log("user",user);
+    // console.log("user",session);
     
     const customer = await pool.query("select customer_id from users where _id = $1",[user?.id])
     // console.log("customer",customer);
@@ -188,37 +188,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    // Step 1 — LOGIN
-    const resLogin = await fetch(
-      "https://dashboard.senselive.io/api/auth/login",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: process.env.SENSELIVE_API_USER,
-          password: process.env.SENSELIVE_API_PASSWORD,
-        }),
-      }
-    );
-
-    if (!resLogin.ok) {
-      return NextResponse.json(
-        { success: false, message: "Login failed" },
-        { status: 401 }
-      );
-    }
-
-    const loginData = await resLogin.json();
-    const token = loginData.token;
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "No token received from login" },
-        { status: 401 }
-      );
-    }
-
-    // const customerId = "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0";
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
@@ -227,7 +196,10 @@ export async function GET() {
       );
     }
     const user = session.user;
-    // console.log("user",user);
+    const token = session.user.tb_token;
+    // const customerId = "c72e27f0-cc56-11f0-b6cf-df3fde93c9f0";
+    
+    // console.log("user",session);
     
     const customer = await pool.query("select customer_id from users where _id = $1",[user?.id])
     // console.log("customer",customer);

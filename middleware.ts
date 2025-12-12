@@ -6,9 +6,35 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
 
-    // ✅ Always allow NextAuth API routes and auth pages
+    // Allow NextAuth internal routes
+    if (pathname.startsWith("/api/auth")) {
+      return NextResponse.next();
+    }
+
+    // ============================
+    // 🔐 API PROTECTION
+    // ============================
+
+    // ❌ Block all /api/* if NOT logged in
+    if (pathname.startsWith("/api") && !pathname.startsWith("/api/admin")) {
+      if (!token) {
+        return new NextResponse("Unauthorized", { status: 401 });
+      }
+    }
+
+    // ❌ Block /api/admin/* if NOT admin
+    if (pathname.startsWith("/api/admin")) {
+      if (!token || token.role !== "admin") {
+        return new NextResponse("Forbidden", { status: 403 });
+      }
+    }
+
+    // ============================
+    // 🔐 PAGE PROTECTION
+    // ============================
+
+    // Public pages
     if (
-      pathname.startsWith("/api/auth") ||
       pathname === "/login" ||
       pathname === "/register" ||
       pathname === "/auth"
@@ -16,28 +42,25 @@ export default withAuth(
       return NextResponse.next();
     }
 
-    // ✅ Protect /admin (require admin role)
+    // Protect /admin pages
     if (pathname.startsWith("/admin")) {
       if (!token || token.role !== "admin") {
         return NextResponse.redirect(new URL("/auth", req.url));
       }
-      return NextResponse.next();
     }
 
-    // ✅ Protect /dashboard and /cart (require login)
-    if (pathname.startsWith("/dashboard") || pathname.startsWith("/cart")) {
+    // Protect /dashboard and /cart pages
+    if (pathname.startsWith("/dashboard") || pathname.startsWith("/")) {
       if (!token) {
         return NextResponse.redirect(new URL("/auth", req.url));
       }
-      return NextResponse.next();
     }
 
-    // ✅ Allow all other routes
     return NextResponse.next();
   },
   {
     callbacks: {
-      authorized: () => true, // We handle authorization manually above
+      authorized: () => true, // we handle manually
     },
   }
 );

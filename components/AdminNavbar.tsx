@@ -111,28 +111,33 @@ const Sidebar = () => {
               <div className="space-y-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2"
+                    >
                       <User className="h-4 w-4" />
-                      {user?.email ? user.email.split('@')[0] : 'Account'}
+                      {user?.email ? user.email.split("@")[0] : "Account"}
                     </Button>
                   </DropdownMenuTrigger>
+
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => {
-                      router.push('/dashboard');
-                      setSidebarOpen(false);
-                    }}>
-                      My Dashboard
+                    {/* ✅ Profile */}
+                    <DropdownMenuItem
+                      onClick={() => {
+                        router.push("/profile"); // update route if needed
+                        setSidebarOpen(false);
+                      }}
+                    >
+                      Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      router.push('/admin');
-                      setSidebarOpen(false);
-                    }}>
-                      Admin Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      handleLogout();
-                      setSidebarOpen(false);
-                    }}>
+
+                    {/* ✅ Logout */}
+                    <DropdownMenuItem
+                      onClick={() => {
+                        handleLogout();
+                        setSidebarOpen(false);
+                      }}
+                    >
                       <LogOut className="h-4 w-4 mr-2" />
                       Logout
                     </DropdownMenuItem>

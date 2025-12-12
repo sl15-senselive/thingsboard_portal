@@ -1,11 +1,11 @@
 import { pool } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-// import { connectToDatabase } from "@/lib/db";
-// import User from "@/models/User";
+import bcrypt from "bcryptjs";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email, password, firstName, lastName, phone_number } =
+      await request.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -14,10 +14,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    const q = "SELECT * FROM users WHERE email = $1";
-    const { rows } = await pool.query(q, [email]);
-    const existingUser = rows[0];
+    // Check if user exists
+    const checkQuery = "SELECT * FROM users WHERE email = $1";
+    const existingUser = (await pool.query(checkQuery, [email])).rows[0];
 
     if (existingUser) {
       return NextResponse.json(
@@ -26,15 +25,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // await User.create({
-    //   email,
-    //   password,
-    // });
-    const insertQuery =
-      "INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *";
-    await pool.query(insertQuery, [email, password]);
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert new user (role defaults to "user")
+    const insertQuery = `
+      INSERT INTO users (email, password, firstname, lastname, phone_number, role)
+      VALUES ($1, $2, $3, $4, $5, 'user')
+      RETURNING _id, email, role
+    `;
+
+    const result = await pool.query(insertQuery, [
+      email,
+      hashedPassword,
+      firstName,
+      lastName,
+      phone_number.toString(),
+    ]);
+
     return NextResponse.json(
-      { message: "User registered successfully" },
+      { message: "User registered successfully", user: result.rows[0] },
       { status: 201 }
     );
   } catch (error) {

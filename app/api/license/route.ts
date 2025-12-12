@@ -3,19 +3,22 @@ import { pool } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-async function getTbToken() {
-  const res = await fetch("https://dashboard.senselive.io/api/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: process.env.SENSELIVE_API_USER,
-      password: process.env.SENSELIVE_API_PASSWORD,
-    }),
-  });
+async function getTbToken(): Promise<string> {
+  const session = await getServerSession(authOptions);
 
-  const json = await res.json();
-  return json.token;
+  if (!session) {
+    throw new Error("No session found");
+  }
+
+  const token = session.user?.tb_token;
+
+  if (!token) {
+    throw new Error("TB token missing in session");
+  }
+
+  return token;
 }
+
 
 async function getTbCustomerNameById(token: string, customerId: string) {
   try {

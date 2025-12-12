@@ -1,17 +1,30 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Menu, X, User, LogOut, Home, Briefcase, Package, Phone, ShoppingBagIcon, Scroll, CreditCard, ReceiptIndianRupee } from 'lucide-react';
-import { useState } from 'react';
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Menu,
+  X,
+  User,
+  LogOut,
+  Home,
+  Briefcase,
+  Package,
+  Phone,
+  ShoppingBagIcon,
+  Scroll,
+  CreditCard,
+  ReceiptIndianRupee,
+} from "lucide-react";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import Image from 'next/image';
+} from "@/components/ui/dropdown-menu";
+import Image from "next/image";
 import { signOut, useSession } from "next-auth/react";
 
 export const Sidebar = () => {
@@ -22,16 +35,16 @@ export const Sidebar = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: Home },
-    { name: 'Solutions', path: '/solutions', icon: ShoppingBagIcon },
-    { name: 'Licenses', path: '/license', icon: Scroll },
-    { name: 'Payments', path: '/payments', icon: CreditCard },
-    { name: 'Bills', path: '/bills', icon: ReceiptIndianRupee },
-    { name: 'Contact', path: '/contact', icon: Phone },
+    { name: "Dashboard", path: "/dashboard", icon: Home },
+    { name: "Solutions", path: "/solutions", icon: ShoppingBagIcon },
+    { name: "Licenses", path: "/license", icon: Scroll },
+    { name: "Payments", path: "/payments", icon: CreditCard },
+    { name: "Bills", path: "/bills", icon: ReceiptIndianRupee },
+    { name: "Contact", path: "/contact", icon: Phone },
   ];
 
   const handleLogout = () => {
-    signOut({ callbackUrl: '/' });
+    signOut({ callbackUrl: "/" });
   };
 
   const isAuthenticated = status === "authenticated";
@@ -48,10 +61,7 @@ export const Sidebar = () => {
               Senselive
             </span>
           </Link>
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2"
-          >
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
             {sidebarOpen ? <X /> : <Menu />}
           </button>
         </div>
@@ -68,7 +78,7 @@ export const Sidebar = () => {
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 z-50 h-screen w-60 bg-background border-r border-border transition-transform duration-300 ease-in-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } md:translate-x-0`}
       >
         <div className="flex flex-col h-full">
@@ -93,8 +103,8 @@ export const Sidebar = () => {
                     onClick={() => setSidebarOpen(false)}
                     className={`flex items-center space-x-3 px-4 py-1 rounded transition-colors ${
                       isActive
-                        ? 'bg-primary/5 text-cyan-500'
-                        : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                        ? "bg-primary/5 text-cyan-500"
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -111,28 +121,33 @@ export const Sidebar = () => {
               <div className="space-y-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start gap-2"
+                    >
                       <User className="h-4 w-4" />
-                      {user?.email ? user.email.split('@')[0] : 'Account'}
+                      {user?.email ? user.email.split("@")[0] : "Account"}
                     </Button>
                   </DropdownMenuTrigger>
+
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => {
-                      router.push('/dashboard');
-                      setSidebarOpen(false);
-                    }}>
-                      My Dashboard
+                    {/* ✅ Profile */}
+                    <DropdownMenuItem
+                      onClick={() => {
+                        router.push("/profile"); // update route if needed
+                        setSidebarOpen(false);
+                      }}
+                    >
+                      Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      router.push('/admin');
-                      setSidebarOpen(false);
-                    }}>
-                      Admin Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => {
-                      handleLogout();
-                      setSidebarOpen(false);
-                    }}>
+
+                    {/* ✅ Logout */}
+                    <DropdownMenuItem
+                      onClick={() => {
+                        handleLogout();
+                        setSidebarOpen(false);
+                      }}
+                    >
                       <LogOut className="h-4 w-4 mr-2" />
                       Logout
                     </DropdownMenuItem>
